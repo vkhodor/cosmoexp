@@ -41,13 +41,16 @@ func promLatestBlockUpdater(nodeAddr string) {
 	for {
 		resp, err := http.Get(fmt.Sprintf("http://%v/status", nodeAddr))
 		if err != nil {
-			log.Fatalln(err)
+			log.Println(err)
+			time.Sleep(10 * time.Second)
+			continue
 		}
 
 		body, err := io.ReadAll(resp.Body)
 		latestBlockHeight, err := strconv.Atoi(gjson.Get(string(body), "result.sync_info.latest_block_height").String())
 		if err != nil {
 			fmt.Println("latest_block_height is not valid integer!")
+			continue
 		}
 		log.Printf("Got latest_block_height: %v", latestBlockHeight)
 		promLatestBlockHeight.Set(float64(latestBlockHeight))
@@ -74,7 +77,9 @@ func promActivePeersCountUpdater(nodeAddr string){
 	for {
 		resp, err := http.Get(fmt.Sprintf("http://%v/net_info", nodeAddr))
 		if err != nil {
-			log.Fatalln(err)
+			log.Println(err)
+			time.Sleep(10 * time.Second)
+			continue
 		}
 
 		body, err := io.ReadAll(resp.Body)
@@ -107,5 +112,9 @@ func main(){
 	go promActivePeersCountUpdater(nodeAddr)
 
 	http.Handle("/metrics", promhttp.Handler())
-	http.ListenAndServe(bindAddr, nil)
+	err := http.ListenAndServe(bindAddr, nil)
+	if err != nil {
+		log.Println("Can't start service!")
+		log.Println(err)
+	}
 }
