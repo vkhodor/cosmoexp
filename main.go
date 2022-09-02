@@ -26,8 +26,8 @@ var (
 		Help: "The Latest Block Height",
 	})
 
-	promLatestBlockDeltaTime = promauto.NewGauge(prometheus.GaugeOpts{
-		Name: "latest_block_delta_time",
+	promLatestBlockDeltaMilliseconds = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "latest_block_delta_milliseconds",
 		Help: "The Latest Block Delta Time between latest block time and current time",
 	})
 
@@ -62,9 +62,9 @@ func promLatestBlockUpdater(nodeAddr string) {
 			continue
 		}
 		now := time.Now()
-		delta := now.Sub(t).Seconds()
+		delta := now.Sub(t).Milliseconds()
 		log.Printf("Got latest_block_delta_time: %v", delta)
-		promLatestBlockDeltaTime.Set(delta)
+		promLatestBlockDeltaMilliseconds.Set(float64(delta))
 
 		time.Sleep(2 * time.Second)
 	}
